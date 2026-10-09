@@ -1,0 +1,27 @@
+import { spawnSync } from "node:child_process";
+
+function run(command, args) {
+  const result = spawnSync(command, args, {
+    stdio: "inherit",
+    env: process.env,
+    shell: false,
+  });
+  if (result.error) {
+    console.error(`Could not run ${command}: ${result.error.message}`);
+    process.exit(1);
+  }
+  if (result.status !== 0) process.exit(result.status ?? 1);
+}
+
+run("npx", ["prisma", "generate"]);
+
+// Keep previews safe. Production initializes its schema and first accounts
+// only after a PostgreSQL DATABASE_URL has been attached to the Vercel project.
+if (process.env.VERCEL_ENV === "production" && process.env.DATABASE_URL) {
+  run("npx", ["prisma", "migrate", "deploy"]);
+  run("npm", ["run", "db:seed"]);
+} else if (process.env.VERCEL_ENV === "production") {
+  console.warn("DATABASE_URL is missing: skipping production migration and seed.");
+}
+
+run("npx", ["next", "build"]);
