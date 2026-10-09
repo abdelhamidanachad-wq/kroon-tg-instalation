@@ -64,7 +64,7 @@ async function main() {
     const { provider, deadline, pdf, ...data } = store;
     await prisma.installation.upsert({
       where: { banner_storeName_city: { banner: data.banner, storeName: data.storeName, city: data.city } },
-      update: { ...data, providerId: ids.get(provider) ?? null, deadline: deadline ? new Date(`${deadline}T12:00:00.000Z`) : null, techSheetUrl: pdf ?? null },
+      update: { ...data, deadline: deadline ? new Date(`${deadline}T12:00:00.000Z`) : null, techSheetUrl: pdf ?? null },
       create: { ...data, providerId: ids.get(provider) ?? null, deadline: deadline ? new Date(`${deadline}T12:00:00.000Z`) : null, techSheetUrl: pdf ?? null }
     });
   }
