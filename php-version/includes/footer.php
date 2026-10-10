@@ -1,0 +1,1 @@
+</main><footer class="text-center text-xs text-stone-500 py-6">SMOLLAN · Activation KROON · Maroc</footer></body></html>
