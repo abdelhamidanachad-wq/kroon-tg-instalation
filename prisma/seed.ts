@@ -53,7 +53,7 @@ async function main() {
   if (adminPassword.length < 6) throw new Error('Initial admin password must be at least 6 characters.');
   if (providerPassword.length < 8) throw new Error('Initial provider password must be at least 8 characters.');
   const adminHash = await bcrypt.hash(adminPassword, 12);
-  await prisma.user.upsert({ where: { username: 'admin' }, update: { role: UserRole.ADMIN, active: true }, create: { username: 'admin', passwordHash: adminHash, role: UserRole.ADMIN } });
+  await prisma.user.upsert({ where: { username: 'admin' }, update: { passwordHash: adminHash, role: UserRole.ADMIN, active: true }, create: { username: 'admin', passwordHash: adminHash, role: UserRole.ADMIN } });
   const providerHash = await bcrypt.hash(providerPassword, 12);
   for (const provider of providers) {
     await prisma.user.upsert({ where: { username: provider.username }, update: { phone: provider.phone, role: UserRole.PROVIDER, active: true }, create: { ...provider, passwordHash: providerHash, role: UserRole.PROVIDER } });
