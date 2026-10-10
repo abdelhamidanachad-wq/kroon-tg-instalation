@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const pin = typeof body.pin === 'string' ? body.pin : '';
-    if (!/^\\d{4,12}$/.test(pin)) {
+    if (!/^\d{4,12}$/.test(pin)) {
       return NextResponse.json({ error: 'Le PIN doit contenir 4 à 12 chiffres.' }, { status: 400 });
     }
     const passwordHash = await bcrypt.hash(pin, 12);
