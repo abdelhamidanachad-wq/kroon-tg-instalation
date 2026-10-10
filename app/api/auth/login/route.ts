@@ -6,11 +6,19 @@ import { createSession } from '@/lib/auth';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const username = typeof body.username === 'string' ? body.username.trim().toLowerCase() : '';
-    const password = typeof body.password === 'string' ? body.password : '';
-    if (!username || !password || username.length > 100 || password.length > 200) return NextResponse.json({ error: 'Identifiant ou mot de passe incorrect.' }, { status: 400 });
+    const role = body.role === 'PROVIDER' ? 'PROVIDER' : 'ADMIN';
+    const username = typeof body.username === 'string' ? body.username.trim().toLowerCase() : 'admin';
+    const pin = typeof body.pin === 'string' ? body.pin : '';
+
+    if (!/^\d{4,12}$/.test(pin)) {
+      return NextResponse.json({ error: 'Entrez un PIN de 4 à 12 chiffres.' }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({ where: { username } });
-    if (!user || !user.active || !(await bcrypt.compare(password, user.passwordHash))) return NextResponse.json({ error: 'Identifiant ou mot de passe incorrect.' }, { status: 401 });
+    if (!user || !user.active || user.role !== role || !(await bcrypt.compare(pin, user.passwordHash))) {
+      return NextResponse.json({ error: 'PIN incorrect ou accès non autorisé.' }, { status: 401 });
+    }
+
     await createSession({ id: user.id, username: user.username, role: user.role });
     return NextResponse.json({ redirectTo: user.role === 'ADMIN' ? '/admin' : '/stores' });
   } catch (error) {
