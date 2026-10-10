@@ -1,0 +1,1 @@
+<?php require __DIR__.'/includes/config.php'; require_login(); header('Location: '.($_SESSION['user']['role']==='ADMIN'?'admin.php':'stores.php')); exit;
