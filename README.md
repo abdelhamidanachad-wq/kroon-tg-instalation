@@ -2,114 +2,58 @@
 
 Application web mobile-first pour piloter les installations de Têtes de Gondole (TG) dans les magasins au Maroc.
 
-## Fonctionnalités livrées dans ce starter
+## Fonctionnalités
 
-- Login identifiant + mot de passe sans email, avec cookie de session HTTP-only signé et expiration après 12 heures.
-- Rôles Admin / Prestataire, vérifiés côté serveur pour les pages et les API.
-- Dashboard admin : progression par statut, recherche et filtre ville, affectation du prestataire, consultation des fiches techniques PDF, gestion des comptes et changement de mot de passe.
-- Espace mobile prestataire : liste des magasins affectés, fiche magasin et lien vers le PDF technique.
-- Formulaire de mesures Face, Fronton, Plinthe et Côtés, stocké dans `Installation.measurements` au format JSON.
-- Upload de photos JPG/PNG/WebP vers Vercel Blob, limite 5 photos / magasin et 10 Mo / photo.
-- Validation de fin d’installation conditionnée par des mesures sauvegardées et au moins 3 photos.
-- Seed des 7 prestataires initiaux et des 30 magasins de la matrice fournie. Les mots de passe sont hachés avec bcrypt et ne sont pas enregistrés en clair dans le code.
+- Connexion simple par rôle : **Admin (PIN)** ou **Prestataire (nom dans une liste + PIN)**.
+- Vérification du rôle et du PIN côté serveur, session HTTP-only signée et expiration après 12 heures.
+- Dashboard admin : suivi des statuts, recherche et filtre par ville, affectations, fiches techniques PDF, gestion des comptes et changement de codes.
+- Espace mobile prestataire : magasins affectés, fiche magasin et lien vers le PDF technique.
+- Mesures Face, Fronton, Plinthe et Côtés.
+- Upload de photos JPG/PNG/WebP vers Vercel Blob, limite de 5 photos par magasin et 10 Mo par photo.
+- Fin d'installation conditionnée par les mesures sauvegardées et au moins 3 photos.
+- Sept prestataires initiaux et les magasins de la matrice fournie. Les PIN sont stockés sous forme de hash bcrypt.
 
 ## Stack
 
-- Next.js App Router + TypeScript + React
-- PostgreSQL + Prisma 6
-- Tailwind CSS 4
-- Sessions JWT signées (`jose`)
-- bcrypt pour les mots de passe
-- Vercel Blob pour les photos
+Next.js App Router, TypeScript, React, PostgreSQL, Prisma 6, Tailwind CSS 4, sessions signées `jose`, bcrypt et Vercel Blob.
 
-## Arborescence
+## Dépôt
 
-```text
-app/
-  api/
-    auth/login/route.ts
-    auth/logout/route.ts
-    admin/users/route.ts
-    admin/users/[id]/route.ts
-    admin/installations/[id]/route.ts
-    installations/[id]/route.ts
-    installations/[id]/photos/route.ts
-  admin/page.tsx
-  admin/admin-client.tsx
-  login/page.tsx
-  stores/page.tsx
-  stores/logout-button.tsx
-  stores/[id]/page.tsx
-  stores/[id]/store-client.tsx
-  globals.css
-  layout.tsx
-  page.tsx
-lib/
-  auth.ts
-  prisma.ts
-  status.ts
-prisma/
-  schema.prisma
-  migrations/20261009000000_init/migration.sql
-  migrations/migration_lock.toml
-  seed.ts
-.env.example
-package.json
-```
+Dépôt source : https://github.com/abdelhamidanachad-wq/kroon-tg-instalation
 
-## Déploiement
+Ne jamais committer de fichier `.env`, PIN, mot de passe, ni jeton.
 
-### 1. Créer un dépôt GitHub
+## Configuration requise avant utilisation
 
-Créer un nouveau dépôt nommé `tg-installations-maroc` sous votre compte GitHub. Gardez-le **privé** : la matrice contient des affectations de prestataires et des informations opérationnelles.
+Dans Vercel > projet > Settings > Environment Variables, vérifiez que les variables suivantes sont renseignées pour l'environnement **Production** :
 
-Extraire ce ZIP, puis pousser son contenu à la racine du nouveau dépôt. Ne poussez jamais le fichier `.env`.
+- `DATABASE_URL` : connexion PostgreSQL.
+- `SESSION_SECRET` : secret aléatoire d'au moins 32 caractères.
+- `INITIAL_ADMIN_PASSWORD` : PIN initial de l'Admin, au moins 4 chiffres si l'interface PIN est utilisée.
+- `INITIAL_PROVIDER_PASSWORD` : PIN initial partagé des prestataires, au moins 4 chiffres si l'interface PIN est utilisée.
+- `BLOB_READ_WRITE_TOKEN` : nécessaire pour enregistrer les photos; connecter un store Vercel Blob peut l'injecter automatiquement.
 
-### 2. Créer PostgreSQL et Blob
+Les deux variables initiales de mot de passe ne servent qu'au seed initial. Le seed n'écrase pas les identifiants déjà existants et n'est pas un mécanisme de réinitialisation des PIN existants. Ne relancez pas le seed sur la production juste pour modifier un PIN sans vérifier d'abord l'effet sur les données et les comptes.
 
-Dans Vercel, créez une base PostgreSQL (ou utilisez une base PostgreSQL compatible) et copiez la chaîne de connexion dans `DATABASE_URL`. Créez/connectez aussi un store Vercel Blob au projet pour que `BLOB_READ_WRITE_TOKEN` soit injecté. Le stockage photo reste désactivé tant que le token n’est pas configuré.
+Le système vérifie le PIN soumis contre le hash bcrypt du compte. Une liste prestataire vide signifie que la base ou le seed des comptes n'est pas prêt.
 
-### 3. Configurer les variables
+## Déploiement Vercel
 
-Copiez `.env.example` vers `.env` en développement. Pour le seed initial, utilisez les identifiants demandés par le propriétaire via les variables locales suivantes, sans les committer :
+Le dépôt est lié à un projet Vercel nommé `kroon-tg-instalation-vofd`. Les pushes sur `main` déclenchent un déploiement automatique.
 
-```dotenv
-INITIAL_ADMIN_PASSWORD="<mot-de-passe-initial-admin>"
-INITIAL_PROVIDER_PASSWORD="<mot-de-passe-initial-prestataires>"
-```
+**Important pour le partage d'équipe :** le projet Vercel doit permettre l'accès aux membres de l'équipe qui ne sont pas connectés à votre compte Vercel. Vérifiez **Settings > Deployment Protection**. Désactivez Vercel Authentication/SSO pour les environnements utilisés par l'équipe, ou utilisez un domaine de production personnalisé exempt de cette protection. Ne partagez pas un lien de contournement temporaire comme URL de production.
 
-`INITIAL_ADMIN_PASSWORD` accepte au moins 6 caractères pour correspondre au mot de passe initial demandé. Changez-le après la première connexion. Les nouveaux mots de passe prestataire créés depuis le dashboard doivent comporter au moins 8 caractères.
+## Utilisation après configuration
 
-Ajoutez `DATABASE_URL` et `SESSION_SECRET` (secret aléatoire de 32 caractères minimum) à Vercel pour Production, Preview et Development. Ajoutez également `BLOB_READ_WRITE_TOKEN` ou liez le store Blob.
+1. Ouvrir l'URL de production du projet.
+2. Sélectionner **Admin** et saisir le PIN Admin, ou sélectionner **Prestataire**, choisir son nom et saisir le PIN prestataire.
+3. L'Admin peut gérer les comptes et changer les mots de passe/PINs depuis le tableau de bord.
+4. Les prestataires ne voient que leurs magasins affectés.
 
-### 4. Installer, migrer et seed
+## Sécurité / mise en production
 
-```bash
-npm install
-npx prisma generate
-npx prisma migrate deploy
-npm run db:seed
-npm run dev
-```
-
-Pour exécuter le seed en local, les trois variables suivantes doivent être disponibles : `DATABASE_URL`, `INITIAL_ADMIN_PASSWORD`, `INITIAL_PROVIDER_PASSWORD`. Le seed est idempotent et crée/actualise les comptes et les 30 magasins. Une réexécution ne réinitialise pas les mots de passe déjà modifiés.
-
-## Comptes initiaux
-
-- `admin` — mot de passe fourni par `INITIAL_ADMIN_PASSWORD`
-- `issam_agadir`
-- `hicham_marrakech`
-- `adil_rabat`
-- `adil_tanger`
-- `adil_fes`
-- `zouhair_kenitra`
-- `interface_casa` — affectations Casablanca, Mohammedia, El Jadida et Berrechid
-
-Tous les prestataires initiaux utilisent `INITIAL_PROVIDER_PASSWORD` au moment du seed. Chaque hash enregistré en base est calculé par bcrypt.
-
-## Notes de production importantes
-
-- Le dépôt doit être privé et les secrets doivent rester dans les variables d’environnement.
-- Il s’agit d’un starter de déploiement : la création du projet Vercel, la liaison au nouveau dépôt, la connexion PostgreSQL/Blob et l’exécution du seed doivent être terminées dans les comptes hébergeurs avant qu’il soit pleinement opérationnel.
-- Prévoir avant une ouverture large : limitation de tentatives de login, rotation obligatoire du mot de passe admin initial, sauvegardes PostgreSQL et vérification des droits d’accès aux URL photo publiques.
-- Les dates et URL PDF ont été reprises de la matrice fournie. Certaines fiches n’avaient pas d’URL dans les informations sources et apparaîtront comme « Non fournie ».
+- Utiliser des PIN difficiles à deviner et distincts pour Admin et Prestataires.
+- Prévoir une limitation des tentatives de connexion si l'application est utilisée à plus grande échelle.
+- Garder le dépôt privé si les données opérationnelles et les affectations doivent rester confidentielles.
+- Vérifier les sauvegardes PostgreSQL et les droits d'accès aux URL des photos.
+- Les URL PDF sont issues de la matrice et certaines peuvent être absentes.
