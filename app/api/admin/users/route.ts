@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const password = typeof body.password === 'string' ? body.password : '';
     const phone = typeof body.phone === 'string' ? body.phone.trim().slice(0, 40) : '';
     if (!/^[a-z0-9_-]{3,50}$/.test(username)) return NextResponse.json({ error: 'Identifiant invalide (3–50 caractères : lettres, chiffres, _ ou -).' }, { status: 400 });
-    if (password.length < 8 || password.length > 200) return NextResponse.json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' }, { status: 400 });
+    if (password.length < 4 || password.length > 200) return NextResponse.json({ error: 'Le PIN/mot de passe doit contenir au moins 4 caractères.' }, { status: 400 });
     if (await prisma.user.findUnique({ where: { username } })) return NextResponse.json({ error: 'Cet identifiant existe déjà.' }, { status: 409 });
     const user = await prisma.user.create({ data: { username, passwordHash: await bcrypt.hash(password, 12), phone: phone || null, role: 'PROVIDER' }, select: { id: true, username: true, phone: true, active: true, createdAt: true } });
     return NextResponse.json({ user }, { status: 201 });
