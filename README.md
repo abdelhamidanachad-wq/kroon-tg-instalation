@@ -29,11 +29,12 @@ Dans Vercel > projet > Settings > Environment Variables, vérifiez que les varia
 
 - `DATABASE_URL` : connexion PostgreSQL.
 - `SESSION_SECRET` : secret aléatoire d'au moins 32 caractères.
-- `INITIAL_ADMIN_PASSWORD` : PIN initial de l'Admin, au moins 4 chiffres si l'interface PIN est utilisée.
-- `INITIAL_PROVIDER_PASSWORD` : PIN initial partagé des prestataires, au moins 4 chiffres si l'interface PIN est utilisée.
+- `INITIAL_ADMIN_PASSWORD` : PIN de l'Admin utilisé uniquement pour un seed initial explicitement demandé.
+- `INITIAL_PROVIDER_PASSWORD` : PIN initial partagé utilisé uniquement pour un seed initial explicitement demandé.
+- `RUN_INITIAL_SEED` : définir sur `true` uniquement pendant l'initialisation volontaire d'une base neuve; sinon le build de production applique les migrations sans réinitialiser les comptes.
 - `BLOB_READ_WRITE_TOKEN` : nécessaire pour enregistrer les photos; connecter un store Vercel Blob peut l'injecter automatiquement.
 
-Les deux variables initiales de mot de passe ne servent qu'au seed initial. Le seed n'écrase pas les identifiants déjà existants et n'est pas un mécanisme de réinitialisation des PIN existants. Ne relancez pas le seed sur la production juste pour modifier un PIN sans vérifier d'abord l'effet sur les données et les comptes.
+Les variables initiales de PIN ne sont lues que si `RUN_INITIAL_SEED=true`. Le seed n'est pas un mécanisme de réinitialisation des PIN existants. Remettez `RUN_INITIAL_SEED` à `false` ou supprimez-la immédiatement après l'initialisation d'une base neuve.
 
 Le système vérifie le PIN soumis contre le hash bcrypt du compte. Une liste prestataire vide signifie que la base ou le seed des comptes n'est pas prêt.
 
