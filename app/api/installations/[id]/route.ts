@@ -24,11 +24,17 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
       if (session.role === 'ADMIN') {
         const allowed = ['A_REPERER','MESURES_PRISES','PROD','DISPATCH','INSTALLE'];
         if (!allowed.includes(body.status)) return NextResponse.json({ error: 'Statut invalide.' }, { status: 400 });
-        if (body.status === 'INSTALLE' && (!current.measurements && !data.measurements || current.photos.length < 3)) return NextResponse.json({ error: 'Il faut sauvegarder les mesures et au moins 3 photos avant validation.' }, { status: 400 });
+        if (body.status === 'INSTALLE') {
+          const proofs = Array.isArray(current.photoProofs) ? current.photoProofs as Array<Record<string, unknown>> : [];
+          const count = proofs.filter(x => typeof x.url === 'string' && typeof x.capturedAt === 'string' && typeof x.latitude === 'number' && typeof x.longitude === 'number').length;
+          if ((!current.measurements && !data.measurements) || count < 3) return NextResponse.json({ error: 'Il faut des mesures sauvegardées et au moins 3 photos avec GPS.' }, { status: 400 });
+        }
         data.status = body.status;
       } else {
         if (body.status !== 'INSTALLE') return NextResponse.json({ error: 'Seul l’administrateur peut modifier ce statut.' }, { status: 403 });
-        if (!(current.measurements || data.measurements) || current.photos.length < 3) return NextResponse.json({ error: 'Il faut sauvegarder les mesures et au moins 3 photos avant validation.' }, { status: 400 });
+        const proofs = Array.isArray(current.photoProofs) ? current.photoProofs as Array<Record<string, unknown>> : [];
+        const count = proofs.filter(x => typeof x.url === 'string' && typeof x.capturedAt === 'string' && typeof x.latitude === 'number' && typeof x.longitude === 'number').length;
+        if (!(current.measurements || data.measurements) || count < 3) return NextResponse.json({ error: 'Il faut des mesures sauvegardées et au moins 3 photos avec GPS.' }, { status: 400 });
         data.status = 'INSTALLE';
       }
     }
