@@ -37,6 +37,15 @@ Les deux variables initiales de mot de passe ne servent qu'au seed initial. Le s
 
 Le système vérifie le PIN soumis contre le hash bcrypt du compte. Une liste prestataire vide signifie que la base ou le seed des comptes n'est pas prêt.
 
+## Nouveautés workflow KROON (branche `feat/kroon-stand-gps-reporting`)
+
+- Chaque magasin a un type d'installation : `TG` ou `STAND` (par défaut `TG` pour préserver la matrice existante).
+- L'administration peut créer des profils d'équipe, puis affecter les magasins depuis la matrice. Les profils ont chacun un username et un PIN/mot de passe individuel.
+- La capture photo guidée demande la géolocalisation du navigateur, superpose sur l'image le nom du magasin, le type de tâche, l'heure et les coordonnées GPS, puis conserve ces informations comme preuve structurée avec l'heure de réception serveur.
+- Le dashboard sépare les volumes TG/Stand et affiche le nombre de preuves GPS.
+- La nouvelle migration `20261020000000_installation_type_photo_proofs` doit être appliquée avant le déploiement.
+- La capture GPS nécessite HTTPS, un appareil/navigateur compatible et l'autorisation explicite de localisation. Les coordonnées et l'heure du téléphone sont des preuves fournies par l'appareil, pas une garantie cryptographique contre la falsification.
+
 ## Déploiement Vercel
 
 Le dépôt est lié à un projet Vercel nommé `kroon-tg-instalation-vofd`. Les pushes sur `main` déclenchent un déploiement automatique.
